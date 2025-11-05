@@ -1,0 +1,28 @@
+{
+  "name": "liberty-lyceum",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.16",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.552.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-helmet-async": "^2.0.5",
+    "react-router-dom": "^7.9.5",
+    "tailwindcss": "^4.1.16"
+  },
+  "devDependencies": {
+    "vite": "^7.1.12"
+  }
+}
