@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -16,85 +16,16 @@ import {
   User,
   BookOpen,
   GraduationCap,
-  Users,
-  Heart
+  LogOut
 } from 'lucide-react'
-
-// Create context for accessibility features
-const AccessibilityContext = createContext()
-
-export const useAccessibility = () => {
-  const context = useContext(AccessibilityContext)
-  if (!context) {
-    throw new Error('useAccessibility must be used within an AccessibilityProvider')
-  }
-  return context
-}
-
-export const AccessibilityProvider = ({ children }) => {
-  const [fontSize, setFontSize] = useState(16) // Base font size in pixels
-  const [highContrast, setHighContrast] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 2, 24)) // Max 24px
-  }
-
-  const decreaseFontSize = () => {
-    setFontSize(prev => Math.max(prev - 2, 12)) // Min 12px
-  }
-
-  const toggleHighContrast = () => {
-    setHighContrast(prev => !prev)
-  }
-
-  const resetAccessibility = () => {
-    setFontSize(16)
-    setHighContrast(false)
-  }
-
-  useEffect(() => {
-    // Apply font size to document
-    document.documentElement.style.fontSize = `${fontSize}px`
-    
-    // Apply high contrast mode
-    if (highContrast) {
-      document.documentElement.classList.add('high-contrast')
-    } else {
-      document.documentElement.classList.remove('high-contrast')
-    }
-
-    return () => {
-      document.documentElement.style.fontSize = ''
-      document.documentElement.classList.remove('high-contrast')
-    }
-  }, [fontSize, highContrast])
-
-  const value = {
-    fontSize,
-    highContrast,
-    isSearchOpen,
-    searchQuery,
-    increaseFontSize,
-    decreaseFontSize,
-    toggleHighContrast,
-    setIsSearchOpen,
-    setSearchQuery,
-    resetAccessibility
-  }
-
-  return (
-    <AccessibilityContext.Provider value={value}>
-      {children}
-    </AccessibilityContext.Provider>
-  )
-}
+import { useAccessibility } from '../../contexts/AccessibilityContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState(null)
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   
@@ -107,6 +38,8 @@ const Header = () => {
     searchQuery,
     setSearchQuery
   } = useAccessibility()
+
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
@@ -163,6 +96,20 @@ const Header = () => {
 
   const handleApplyClick = () => {
     navigate('/application')
+  }
+
+  const handleLogout = () => {
+    logout()
+    setUserDropdownOpen(false)
+    navigate('/')
+  }
+
+  const handleLMSNavigation = () => {
+    if (user) {
+      navigate('/lms')
+    } else {
+      navigate('/login', { state: { from: { pathname: '/lms' } } })
+    }
   }
 
   return (
@@ -249,7 +196,8 @@ const Header = () => {
             {/* Logo */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3"
+              className="flex items-center space-x-3 cursor-pointer"
+              onClick={() => navigate('/')}
             >
               <div className="bg-gradient-to-r from-blue-600 to-yellow-500 p-3 rounded-xl text-white">
                 <div className="w-8 h-8 font-bold text-center flex items-center justify-center">
@@ -323,16 +271,113 @@ const Header = () => {
                 <Search size={20} />
               </button>
 
-              {/* Apply Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleApplyClick}
-                className="bg-gradient-to-r from-blue-600 to-yellow-500 text-white px-6 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
-              >
-                <User size={16} />
-                <span>Apply Now</span>
-              </motion.button>
+              {/* User Auth Section */}
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  {/* LMS Access Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleLMSNavigation}
+                    className="bg-green-600 text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:bg-green-700 transition-all flex items-center space-x-2"
+                  >
+                    <BookOpen size={16} />
+                    <span>LMS</span>
+                  </motion.button>
+
+                  {/* User Profile Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                      className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <img 
+                        src={user.avatar} 
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full border-2 border-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700 max-w-32 truncate">
+                        {user.name}
+                      </span>
+                      <ChevronDown size={16} className="text-gray-500" />
+                    </button>
+
+                    <AnimatePresence>
+                      {userDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50"
+                        >
+                          <div className="px-4 py-2 border-b border-gray-100">
+                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                          </div>
+                          
+                          <Link
+                            to="/lms"
+                            className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm"
+                            onClick={() => setUserDropdownOpen(false)}
+                          >
+                            <BookOpen size={16} />
+                            <span>LMS Dashboard</span>
+                          </Link>
+                          
+                          <Link
+                            to="/profile"
+                            className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm"
+                            onClick={() => setUserDropdownOpen(false)}
+                          >
+                            <User size={16} />
+                            <span>My Profile</span>
+                          </Link>
+                          
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center space-x-2 w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors text-sm"
+                          >
+                            <LogOut size={16} />
+                            <span>Logout</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  {/* Login Button */}
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors text-sm px-3 py-2 rounded-lg hover:bg-gray-50"
+                  >
+                    Login
+                  </button>
+
+                  {/* Sign Up Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/signup')}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold shadow-lg hover:bg-blue-700 transition-all flex items-center space-x-2"
+                  >
+                    <User size={16} />
+                    <span>Sign Up</span>
+                  </motion.button>
+
+                  {/* Apply Now Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleApplyClick}
+                    className="bg-gradient-to-r from-blue-600 to-yellow-500 text-white px-6 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
+                  >
+                    <User size={16} />
+                    <span>Apply Now</span>
+                  </motion.button>
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -391,17 +436,81 @@ const Header = () => {
                       )}
                     </div>
                   ))}
+                  
+                  {/* Mobile Auth Section */}
                   <div className="px-4 pt-4 border-t">
-                    <button 
-                      onClick={() => {
-                        handleApplyClick()
-                        setIsMobileMenuOpen(false)
-                      }}
-                      className="w-full bg-gradient-to-r from-blue-600 to-yellow-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center space-x-2"
-                    >
-                      <User size={16} />
-                      <span>Apply Now</span>
-                    </button>
+                    {user ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                          <img 
+                            src={user.avatar} 
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full border-2 border-blue-500"
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                          </div>
+                        </div>
+                        
+                        <button 
+                          onClick={() => {
+                            handleLMSNavigation()
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="w-full bg-green-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center space-x-2"
+                        >
+                          <BookOpen size={16} />
+                          <span>LMS Dashboard</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => {
+                            handleLogout()
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="w-full bg-red-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center space-x-2"
+                        >
+                          <LogOut size={16} />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <button 
+                          onClick={() => {
+                            navigate('/login')
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="w-full bg-blue-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center space-x-2"
+                        >
+                          <User size={16} />
+                          <span>Login</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => {
+                            navigate('/signup')
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="w-full bg-gradient-to-r from-blue-600 to-yellow-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center space-x-2"
+                        >
+                          <User size={16} />
+                          <span>Sign Up</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => {
+                            handleApplyClick()
+                            setIsMobileMenuOpen(false)
+                          }}
+                          className="w-full bg-gradient-to-r from-blue-600 to-yellow-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg flex items-center justify-center space-x-2"
+                        >
+                          <User size={16} />
+                          <span>Apply Now</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -493,41 +602,8 @@ const Header = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Add high contrast styles */}
-      <style jsx>{`
-        .high-contrast {
-          --tw-bg-opacity: 1;
-          background-color: rgb(0 0 0 / var(--tw-bg-opacity)) !important;
-          color: rgb(255 255 255 / var(--tw-text-opacity)) !important;
-        }
-        
-        .high-contrast .text-gray-700 {
-          color: rgb(255 255 255 / var(--tw-text-opacity)) !important;
-        }
-        
-        .high-contrast .bg-white {
-          background-color: rgb(0 0 0 / var(--tw-bg-opacity)) !important;
-        }
-        
-        .high-contrast .border-gray-100 {
-          border-color: rgb(255 255 255 / 0.2) !important;
-        }
-      `}</style>
     </>
   )
 }
 
 export default Header
-
-// Wrap your app with AccessibilityProvider in your main App.jsx or index.js
-// Example:
-// import { AccessibilityProvider } from './components/Header'
-// 
-// function App() {
-//   return (
-//     <AccessibilityProvider>
-//       <YourApp />
-//     </AccessibilityProvider>
-//   )
-// }

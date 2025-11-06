@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
+import ErrorBoundary from './components/Layout/ErrorBoundary'
 import Home from './pages/Home'
 import About from './pages/About'
 import Academics from './pages/Academics'
@@ -18,30 +19,62 @@ import Careers from './pages/Careers'
 import VirtualTour from './pages/VirtualTour'
 import SchoolCalendar from './pages/SchoolCalendar'
 import Application from './pages/Application'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import LMSDashboard from './pages/LMSDashboard'
+import Profile from './pages/Profile' // Add this import
+import ProtectedRoute from './components/Layout/ProtectedRoute'
 
 function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/academics" element={<Academics />} />
-        <Route path="/admissions" element={<Admissions />} />
-        <Route path="/student-life" element={<StudentLife />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/campus-tour" element={<CampusTour />} />
-        <Route path="/faculty" element={<Faculty />} />
-        <Route path="/testimonials" element={<Testimonials />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/summer-program" element={<SummerProgram />} />
-        <Route path="/scholarships" element={<Scholarships />} />
-        <Route path="/careers" element={<Careers />} />
-        <Route path="/virtual-tour" element={<VirtualTour />} />
-        <Route path="/resources/calendar" element={<SchoolCalendar/>} />
-        <Route path="/application" element={<Application/>} />
-      </Routes>
-    </Layout>
+    <ErrorBoundary>
+      <Layout>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/academics" element={<Academics />} />
+          <Route path="/admissions" element={<Admissions />} />
+          <Route path="/student-life" element={<StudentLife />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/campus-tour" element={<CampusTour />} />
+          <Route path="/faculty" element={<Faculty />} />
+          <Route path="/testimonials" element={<Testimonials />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/summer-program" element={<SummerProgram />} />
+          <Route path="/scholarships" element={<Scholarships />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/virtual-tour" element={<VirtualTour />} />
+          <Route path="/resources/calendar" element={<SchoolCalendar/>} />
+          <Route path="/application" element={<Application/>} />
+          
+          {/* Authentication Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          
+          {/* Protected LMS Routes */}
+          <Route 
+            path="/lms" 
+            element={
+              <ProtectedRoute>
+                <LMSDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Profile Route */}
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile /> {/* Use the actual Profile component */}
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </Layout>
+    </ErrorBoundary>
   )
 }
 
