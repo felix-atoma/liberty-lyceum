@@ -1,3 +1,4 @@
+// App.js
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
@@ -22,58 +23,102 @@ import Application from './pages/Application'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import LMSDashboard from './pages/LMSDashboard'
-import Profile from './pages/Profile' // Add this import
+import Profile from './pages/Profile'
+import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminMessages from './pages/AdminMessages'
+import Unauthorized from './pages/Unauthorized'
+import NotFound from './pages/NotFound Page'
 import ProtectedRoute from './components/Layout/ProtectedRoute'
+import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
   return (
     <ErrorBoundary>
-      <Layout>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/academics" element={<Academics />} />
-          <Route path="/admissions" element={<Admissions />} />
-          <Route path="/student-life" element={<StudentLife />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/campus-tour" element={<CampusTour />} />
-          <Route path="/faculty" element={<Faculty />} />
-          <Route path="/testimonials" element={<Testimonials />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/summer-program" element={<SummerProgram />} />
-          <Route path="/scholarships" element={<Scholarships />} />
-          <Route path="/careers" element={<Careers />} />
-          <Route path="/virtual-tour" element={<VirtualTour />} />
-          <Route path="/resources/calendar" element={<SchoolCalendar/>} />
-          <Route path="/application" element={<Application/>} />
-          
-          {/* Authentication Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          
-          {/* Protected LMS Routes */}
-          <Route 
-            path="/lms" 
-            element={
-              <ProtectedRoute>
-                <LMSDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Profile Route */}
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile /> {/* Use the actual Profile component */}
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </Layout>
+      <AuthProvider>
+        <Layout>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/academics" element={<Academics />} />
+            <Route path="/admissions" element={<Admissions />} />
+            <Route path="/student-life" element={<StudentLife />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/campus-tour" element={<CampusTour />} />
+            <Route path="/faculty" element={<Faculty />} />
+            <Route path="/testimonials" element={<Testimonials />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/summer-program" element={<SummerProgram />} />
+            <Route path="/scholarships" element={<Scholarships />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/virtual-tour" element={<VirtualTour />} />
+            <Route path="/resources/calendar" element={<SchoolCalendar />} />
+            <Route path="/application" element={<Application />} />
+            
+            {/* Authentication Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            
+            {/* Error Pages */}
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/404" element={<NotFound />} />
+            
+            {/* Protected LMS Routes (Students, Teachers, Parents) */}
+            <Route 
+              path="/lms" 
+              element={
+                <ProtectedRoute>
+                  <LMSDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Protected Admin Routes */}
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/messages" 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminMessages />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Additional Admin Routes can be added here */}
+            <Route 
+              path="/admin/*" 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Catch-all route for 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </AuthProvider>
     </ErrorBoundary>
   )
 }

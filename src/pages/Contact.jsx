@@ -1,3 +1,4 @@
+// pages/Contact.js
 import React, { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,8 +18,10 @@ import {
   Building,
   CheckCircle,
   X,
-  Play
+  Play,
+  AlertCircle
 } from 'lucide-react'
+import { applicationsAPI } from '../services/api'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -35,6 +38,7 @@ const Contact = () => {
   const [activeTab, setActiveTab] = useState('general')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [error, setError] = useState('')
 
   const contactMethods = [
     {
@@ -128,25 +132,35 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError('')
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    console.log('Form submitted:', formData)
-    setIsSubmitting(false)
-    setShowSuccess(true)
-    
-    // Reset form
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      studentAge: '',
-      programInterest: '',
-      message: '',
-      contactMethod: 'email'
-    })
+    try {
+      const contactData = {
+        ...formData,
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        inquiryType: activeTab,
+        timestamp: new Date().toISOString()
+      }
+
+      await applicationsAPI.submitContact(contactData)
+      
+      setShowSuccess(true)
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        studentAge: '',
+        programInterest: '',
+        message: '',
+        contactMethod: 'email'
+      })
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to send message. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -317,6 +331,20 @@ const Contact = () => {
                       Fill out the form below and we'll get back to you within 24 hours
                     </p>
                   </div>
+
+                  {/* Error Display */}
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>{error}</span>
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Inquiry Type Tabs */}
                   <div className="flex flex-wrap gap-3 mb-8">

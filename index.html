@@ -1,12 +1,59 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GH">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    
+    <!-- Favicon Package -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>liberty-lyceum</title>
+    
+    <!-- Preconnect to External Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+    
+    <!-- Default SEO (Will be overridden by React Helmet) -->
+    <title>Liberty Lyceum - Premier Christian International School in Accra, Ghana</title>
+    <meta name="description" content="Liberty Lyceum offers world-class IB & Cambridge curricula with Christian values. Nurturing winners and more than conquerors through innovative education in Baatsona, Spintex, Accra." />
+    
+    <!-- Google Analytics (Replace with your tracking ID) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <!-- Facebook Pixel (Optional - Replace with your pixel ID) -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', 'YOUR_PIXEL_ID');
+      fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+    /></noscript>
   </head>
   <body>
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+        <h1>Liberty Lyceum International School</h1>
+        <p>For the best experience, please enable JavaScript in your browser.</p>
+        <p>Contact us: +233-24-123-4567 | info@libertylyceum.edu.gh</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

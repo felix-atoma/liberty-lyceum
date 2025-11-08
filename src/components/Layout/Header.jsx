@@ -81,7 +81,7 @@ const Header = () => {
       ]
     },
     { name: 'Student Life', href: '/student-life' },
-    { name: 'Calendar', href: '/calendar' },
+    // Calendar link removed from navigation
     { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },
   ]
@@ -580,7 +580,6 @@ const Header = () => {
                     <h4 className="font-semibold text-gray-900 mb-2">Quick Links</h4>
                     <div className="space-y-1">
                       {[
-                        { name: 'Academic Calendar', href: '/calendar' },
                         { name: 'Application Form', href: '/application' },
                         { name: 'Contact Info', href: '/contact' },
                         { name: 'School Blog', href: '/blog' }

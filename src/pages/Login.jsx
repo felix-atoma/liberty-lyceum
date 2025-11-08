@@ -1,8 +1,9 @@
+// pages/Login.js
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext'; // Make sure this path is correct
-import { Mail, Lock, Eye, EyeOff, BookOpen } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Mail, Lock, Eye, EyeOff, BookOpen, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -22,32 +23,14 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    try {
-      const result = await login(email, password);
-      
-      if (result.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(result.error || 'Invalid credentials');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
+    const result = await login(email, password);
+    
+    if (result.success) {
+      navigate(from, { replace: true });
+    } else {
+      setError(result.error || 'Invalid credentials');
     }
-  };
-
-  // Demo accounts for testing
-  const demoAccounts = [
-    { email: 'student@libertylyceum.edu.gh', password: 'password', role: 'Student' },
-    { email: 'teacher@libertylyceum.edu.gh', password: 'password', role: 'Teacher' },
-    { email: 'admin@libertylyceum.edu.gh', password: 'password', role: 'Admin' }
-  ];
-
-  const fillDemoAccount = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
+    setLoading(false);
   };
 
   return (
@@ -69,26 +52,11 @@ const Login = () => {
           </p>
         </div>
         
-        {/* Demo Accounts */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Accounts:</h3>
-          <div className="space-y-2">
-            {demoAccounts.map((account, index) => (
-              <button
-                key={index}
-                onClick={() => fillDemoAccount(account.email, account.password)}
-                className="w-full text-left text-xs text-blue-700 hover:text-blue-900 hover:bg-blue-100 p-2 rounded transition-colors"
-              >
-                <strong>{account.role}:</strong> {account.email} / {account.password}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <form className="mt-4 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
             </div>
           )}
           

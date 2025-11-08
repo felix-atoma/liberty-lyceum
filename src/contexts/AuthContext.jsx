@@ -1,4 +1,6 @@
+// contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authAPI, usersAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -13,130 +15,106 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    checkAuthStatus();
   }, []);
 
-  const login = async (email, password) => {
-    setLoading(true);
+  const checkAuthStatus = async () => {
     try {
-      // Simulate different user types based on email
-      let userData;
-      
-      if (email.includes('teacher') || email.includes('staff')) {
-        userData = {
-          id: 1,
-          email,
-          name: email.split('@')[0],
-          role: 'teacher',
-          status: 'active',
-          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=2684FF`,
-          joinDate: '2024-01-15',
-          department: 'Mathematics',
-          courses: ['IB Mathematics HL', 'Cambridge Mathematics A-Level'],
-          permissions: ['create_courses', 'grade_assignments', 'manage_students']
-        };
-      } else if (email.includes('admin')) {
-        userData = {
-          id: 2,
-          email,
-          name: email.split('@')[0],
-          role: 'admin',
-          status: 'active',
-          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=FF5733`,
-          joinDate: '2023-08-01',
-          department: 'Administration',
-          permissions: ['all_access']
-        };
-      } else {
-        userData = {
-          id: 3,
-          email,
-          name: email.split('@')[0],
-          role: 'student',
-          status: 'active',
-          avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=10B981`,
-          joinDate: '2024-09-01',
-          grade: 'Grade 12',
-          studentId: 'STU2024001',
-          courses: ['IB Mathematics HL', 'Cambridge Physics A-Level', 'IB English Literature HL'],
-          gpa: 3.8,
-          attendance: 95.2
-        };
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const response = await usersAPI.getProfile();
+        setUser(response.data.data);
       }
-      
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return { success: true };
     } catch (error) {
-      return { success: false, error: 'Login failed' };
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
   };
 
-  const signup = async (email, password, name, role = 'student') => {
-    setLoading(true);
+  const login = async (email, password) => {
     try {
-      const userData = {
-        id: Date.now(),
+      setLoading(true);
+      setError('');
+      
+      const response = await authAPI.login(email, password);
+      const { token, user: userData } = response.data.data;
+
+      localStorage.setItem('authToken', token);
+      setUser(userData);
+
+      return { success: true, user: userData };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signup = async (email, password, name, role = 'student', additionalData = {}) => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const signupData = {
         email,
+        password,
         name,
         role,
-        status: 'pending', // New users start as pending
-        avatar: `https://ui-avatars.com/api/?name=${name}&background=random`,
-        joinDate: new Date().toISOString().split('T')[0],
-        ...(role === 'student' && {
-          grade: 'Not assigned',
-          studentId: `PENDING${Date.now()}`,
-          courses: [],
-          gpa: 0,
-          attendance: 0
-        }),
-        ...(role === 'teacher' && {
-          department: 'Not assigned',
-          courses: [],
-          permissions: []
-        })
+        phone: additionalData.phone || '',
+        address: additionalData.address || '',
+        dateOfBirth: additionalData.dateOfBirth || '',
+        gender: additionalData.gender || '',
+        nationality: additionalData.nationality || ''
       };
-      
+
+      const response = await authAPI.signup(signupData);
+      const { token, user: userData } = response.data.data;
+
+      localStorage.setItem('authToken', token);
       setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return { success: true, message: 'Account created! Waiting for admin approval.' };
+
+      return { success: true, user: userData, message: 'Account created successfully!' };
     } catch (error) {
-      return { success: false, error: 'Signup failed' };
+      const errorMessage = error.response?.data?.message || 'Signup failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
   const updateProfile = async (profileData) => {
-    setLoading(true);
     try {
-      const updatedUser = {
-        ...user,
-        ...profileData,
-        avatar: profileData.avatar || user.avatar
-      };
+      setLoading(true);
+      const response = await usersAPI.updateProfile(profileData);
+      const updatedUser = response.data.data;
       
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      return { success: true, message: 'Profile updated successfully!' };
+      return { success: true, message: 'Profile updated successfully!', user: updatedUser };
     } catch (error) {
-      return { success: false, error: 'Profile update failed' };
+      const errorMessage = error.response?.data?.message || 'Profile update failed';
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('authToken');
+      setUser(null);
+    }
   };
 
   const value = {
@@ -145,7 +123,9 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     updateProfile,
-    loading
+    loading,
+    error,
+    setError
   };
 
   return (

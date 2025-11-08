@@ -1,8 +1,9 @@
+// pages/Signup.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, Eye, EyeOff, User, GraduationCap } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, GraduationCap, AlertCircle } from 'lucide-react';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -16,33 +17,7 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // Add error boundary for useAuth hook
-  let auth;
-  try {
-    auth = useAuth();
-  } catch (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="h-8 w-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Error</h2>
-          <p className="text-gray-600 mb-6">
-            There seems to be an issue with the authentication system. Please refresh the page.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const { signup } = auth;
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -117,8 +92,9 @@ const Signup = () => {
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
             </div>
           )}
           

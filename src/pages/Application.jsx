@@ -1,6 +1,8 @@
+// pages/Application.js
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion' // Added AnimatePresence import
 import { 
   User,
   Mail,
@@ -26,6 +28,7 @@ import {
   X,
   AlertCircle
 } from 'lucide-react'
+import { applicationsAPI } from '../services/api'
 
 const Application = () => {
   const [currentStep, setCurrentStep] = useState(1)
@@ -81,6 +84,10 @@ const Application = () => {
   const [formErrors, setFormErrors] = useState({})
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [applicationId, setApplicationId] = useState(null)
+
+  const navigate = useNavigate()
 
   const steps = [
     { number: 1, title: 'Student Info', icon: User, description: 'Personal details' },
@@ -154,7 +161,22 @@ const Application = () => {
         if (!formData.country) errors.country = 'Country is required'
         break
         
-      // Add validation for other steps
+      case 3:
+        if (!formData.gradeLevel.trim()) errors.gradeLevel = 'Grade level is required'
+        if (!formData.programInterest) errors.programInterest = 'Program interest is required'
+        if (!formData.startTerm) errors.startTerm = 'Start term is required'
+        break
+        
+      case 4:
+        if (!formData.parentName.trim()) errors.parentName = 'Parent/Guardian name is required'
+        if (!formData.relationship) errors.relationship = 'Relationship is required'
+        if (!formData.parentEmail.trim()) errors.parentEmail = 'Parent email is required'
+        else if (!/\S+@\S+\.\S+/.test(formData.parentEmail)) errors.parentEmail = 'Parent email is invalid'
+        if (!formData.parentPhone.trim()) errors.parentPhone = 'Parent phone is required'
+        break
+        
+      default:
+        break
     }
     
     setFormErrors(errors)
@@ -173,14 +195,25 @@ const Application = () => {
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files)
-    const newFiles = files.map(file => ({
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    const newFiles = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
       type: file.type,
       file: file
-    }))
-    setUploadedFiles(prev => [...prev, ...newFiles])
+    }));
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
   }
 
   const removeFile = (fileId) => {
@@ -190,13 +223,28 @@ const Application = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    console.log('Form submitted:', formData)
-    alert('Application submitted successfully!')
-    setIsSubmitting(false)
+    setError('')
+
+    try {
+      // Step 1: Submit application data
+      const applicationResponse = await applicationsAPI.submitApplication(formData)
+      const { applicationId } = applicationResponse.data.data
+      setApplicationId(applicationId)
+
+      // Step 2: Upload documents if any
+      if (uploadedFiles.length > 0) {
+        await applicationsAPI.uploadDocuments(applicationId, uploadedFiles)
+      }
+
+      // Step 3: Show success and redirect
+      alert('Application submitted successfully!')
+      navigate('/application-status', { state: { applicationId } })
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Application submission failed. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const StepIndicator = () => (
@@ -330,8 +378,10 @@ const Application = () => {
       case 1:
         return (
           <motion.div
+            key="step-1"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-6">
@@ -383,8 +433,10 @@ const Application = () => {
       case 2:
         return (
           <motion.div
+            key="step-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-6">
@@ -442,8 +494,10 @@ const Application = () => {
       case 3:
         return (
           <motion.div
+            key="step-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-6">
@@ -509,8 +563,10 @@ const Application = () => {
       case 4:
         return (
           <motion.div
+            key="step-4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 mb-6">
@@ -563,8 +619,10 @@ const Application = () => {
       case 5:
         return (
           <motion.div
+            key="step-5"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl p-6 mb-6">
@@ -633,8 +691,10 @@ const Application = () => {
       case 6:
         return (
           <motion.div
+            key="step-6"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-6 mb-6">
@@ -710,14 +770,30 @@ const Application = () => {
       case 7:
         return (
           <motion.div
+            key="step-7"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
             <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Review Your Application</h3>
               <p className="text-gray-600">Please review all information before submitting</p>
             </div>
+            
+            {/* Error Display */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="w-5 h-5" />
+                  <span>{error}</span>
+                </div>
+              </motion.div>
+            )}
             
             <div className="space-y-6">
               {[
